@@ -50,6 +50,7 @@
     cylY: function (cx, cz, y0, y1, r, c, o) { return ext('y', ell(cx, cz, r, r, 18), y0, y1, c, o); },
     cylX: function (cy, cz, x0, x1, r, c, o) { return ext('x', ell(cy, cz, r, r, 18), x0, x1, c, o); },
     ellPoly: ell,
+    ext: ext,   // prisma de un polígono 2D en cualquier eje (formas no rectangulares)
     // polígono plano en 3D (decals, tapas, cristales...)
     flat: function (a3, fill, extra) { return '<polygon points="' + pts(a3) + '" fill="' + fill + '" ' + (extra || '') + '/>'; },
     line: function (a, b, stroke, w, extra) { return '<line x1="' + pt(a).split(',')[0] + '" y1="' + pt(a).split(',')[1] + '" x2="' + pt(b).split(',')[0] + '" y2="' + pt(b).split(',')[1] + '" stroke="' + stroke + '" stroke-width="' + (w || .5) + '" ' + (extra || '') + '/>'; },
