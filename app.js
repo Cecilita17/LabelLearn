@@ -29,6 +29,60 @@
   function tr(o) { return prefs.lang === 'en' ? o.en : o.es; }
   function word(c) { return { e: c[0], zh: c[1], py: c[2], es: c[3], en: c[4] }; }
 
+  // ---------- Flashcards ----------
+  var Cards = window.LabelCards;
+  function cardsEntry() {
+    var b = el('button', 'fc-entry'); b.type = 'button';
+    b.appendChild(el('span', 'ic', '🃏'));
+    var t = el('span'); t.appendChild(el('b', null, 'Flashcards')); t.appendChild(el('small', null, ''));
+    b.appendChild(t);
+    var badge = el('span', 'fc-badge'); b.appendChild(badge);
+    function fill() {
+      var n = Cards.dueCount(), saved = Cards.savedCount();
+      t.lastChild.textContent = saved ? (prefs.lang === 'en' ? 'Review the words you saved' : 'Repasar las palabras que guardaste')
+        : (prefs.lang === 'en' ? 'Save words with ⭐ to study them' : 'Guardá palabras con ⭐ para estudiarlas');
+      badge.textContent = n; badge.hidden = !n;
+    }
+    b.fill = fill; fill(); cardsBtn = b;
+    b.addEventListener('click', openCards);
+    return b;
+  }
+  var cardsBtn = null;
+  function roomOf(zh) {
+    var ix = window.LABELLEARN_INDEX && window.LABELLEARN_INDEX[zh];
+    if (ix && ix.length) return ix[0];
+    for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i].cols.some(function (c) { return c.some(function (x) { return x && x[1] === zh; }); })) return ROOMS[i].id;
+    return null;
+  }
+  function openCards() {
+    closeSheet();
+    Cards.open({
+      host: document.querySelector('.app'), lang: function () { return prefs.lang; },
+      lookup: function (zh) { return WORDS[zh]; }, speak: speak,
+      show: function (zh) { var id = roomOf(zh); if (!id) return; pendingSelect = zh; if (location.hash === '#/' + id) route(); else location.hash = '#/' + id; },
+      onClose: function () { if (cardsBtn && cardsBtn.isConnected) cardsBtn.fill(); }
+    });
+  }
+  function roomWords(r) {
+    var out = [];
+    r.cols.forEach(function (col) { col.forEach(function (c) { if (c && out.indexOf(c[1]) < 0) out.push(c[1]); }); });
+    return out;
+  }
+  function fillRoomSave() {
+    var b = $('roomSave');
+    if (!currentRoom) { b.hidden = true; return; }
+    var ws = roomWords(currentRoom), left = ws.filter(function (w) { return !Cards.isSaved(w); }).length;
+    b.hidden = false; b.setAttribute('aria-pressed', !left);
+    var en = prefs.lang === 'en';
+    b.textContent = left ? '⭐ ' + (en ? 'Save ' : 'Guardar ') + left : '✓ ' + (en ? 'Saved' : 'Guardada');
+    b.setAttribute('aria-label', left ? (en ? 'Save all ' + left + ' words of this room' : 'Guardar las ' + left + ' palabras de esta habitación') : (en ? 'All words of this room are saved' : 'Todas las palabras de la habitación están guardadas'));
+  }
+  $('roomSave').addEventListener('click', function () { if (currentRoom) { Cards.saveMany(roomWords(currentRoom)); fillRoomSave(); if (currentObj) fillSheet(currentObj); } });
+  $('shStar').addEventListener('click', function () {
+    if (!currentObj) return;
+    Cards.setSaved(currentObj.zh, !Cards.isSaved(currentObj.zh)); fillSheet(currentObj); fillRoomSave();
+  });
+
   // ---------- Vista general: casa en corte ----------
   function tile(r, extra) {
     var t = el('button', 'tile ' + (extra || '')); t.type = 'button'; t.dataset.room = r.id;
@@ -56,6 +110,7 @@
       go: function (roomId, zh) { pendingSelect = zh; location.hash = '#/' + roomId; }
     });
     wrap.appendChild(search.bar);
+    wrap.appendChild(cardsEntry());
     wrap.appendChild(roof);
 
     var body = el('div', 'house-body');
@@ -153,6 +208,7 @@
     var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
     view.classList.toggle('iso-view', isIso);
     if (isIso) renderIso(currentRoom); else if (currentRoom) renderRoom(currentRoom); else renderHouse();
+    fillRoomSave();
     applyPrefs(true);
   }
 
@@ -169,6 +225,8 @@
     $('togTrans').textContent = '译 ' + (prefs.lang === 'en' ? 'Translation' : 'Traducción');
     $('shPlay').textContent = '🔊 ' + (prefs.lang === 'en' ? 'Listen' : 'Escuchar');
     $('backTxt').textContent = prefs.lang === 'en' ? 'Home' : 'Casa';
+    fillRoomSave();
+    if (cardsBtn && cardsBtn.isConnected) cardsBtn.fill();
     if (!skipRoute) {
       Array.prototype.forEach.call(view.querySelectorAll('.cell .tr'), function (n) {
         n.textContent = prefs.lang === 'en' ? n.dataset.en : n.dataset.es;
@@ -187,15 +245,19 @@
   }
 
   // ---------- Ficha de objeto + audio ----------
-  function speak(text) {
+  function speak(text, rate) {
     if (!('speechSynthesis' in window)) return;
     var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN'; u.rate = 0.8;
+    u.lang = 'zh-CN'; u.rate = rate || 0.8;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
   }
   function fillSheet(o) {
     $('shEmoji').textContent = o.e; $('shZh').textContent = o.zh;
     $('shPy').textContent = o.py; $('shTr').textContent = tr(o);
+    var star = $('shStar'), saved = Cards.isSaved(o.zh), en = prefs.lang === 'en';
+    star.hidden = !Cards.hasSentence(o.zh);
+    star.setAttribute('aria-pressed', saved);
+    star.textContent = saved ? '⭐ ' + (en ? 'Saved' : 'Guardada') : '☆ ' + (en ? 'Save' : 'Guardar');
   }
   function openSheet(o, keepFocus) { currentObj = o; fillSheet(o); sheet.hidden = false; if (!keepFocus) $('shClose').focus(); speak(o.zh); }
   function closeSheet() { sheet.hidden = true; currentObj = null; if (iso) iso.deselect(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }

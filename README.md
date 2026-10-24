@@ -34,3 +34,12 @@ Casa en corte (estilo dollhouse) para aprender vocabulario en chino mandarín. C
 - `search-index.js` es **generado** (`node tools/build_index.js`): para cada palabra, las habitaciones donde aparece en una escena. Volver a correrlo al cambiar escenas.
 - `search.js`: el buscador. `app.js` solo lo monta en la pantalla de la casa.
 - Íconos: `icon.svg` es la fuente; `node tools/make_icons.js` regenera los PNG.
+
+## Flashcards
+
+Mismo sistema de repaso espaciado que LinguaGloss (escalera 1 min → 10 min → 1/3/7/14/30/60/120 días, calificaciones *Otra vez / Bien / Fácil*, hasta 10 tarjetas nuevas por sesión, nivel 2 = completar el hueco tras dos aciertos seguidos), pero con la **traducción de la oración entera** en lugar de glosas.
+
+- El mazo son **solo las palabras guardadas con ⭐** (ficha del objeto, o «Guardar N» en la barra de cada habitación para guardarlas todas).
+- `sentences.js` (generado) trae una oración fácil por palabra (354), con pinyin por palabra y traducción ES/EN; se muestra la del idioma elegido. Las oraciones se escribieron una sola vez en `tools/sentences/*.tsv` (palabra, oración segmentada con espacios, ES, EN) y se compilan con `python3 tools/build_sentences.py` (requiere `pypinyin`; valida que cada palabra del vocabulario tenga oración y aparezca como token).
+- `flashcards.js`: lógica de repaso + pantalla. El progreso se guarda en el dispositivo (`localStorage`, clave `labellearn_flashcards_v1`).
+- «📍 Ver en la casa» abre la habitación y acerca la cámara al objeto.

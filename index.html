@@ -26,6 +26,7 @@
     <div class="subbar">
       <button class="back" id="back" hidden>‹ <span id="backTxt">Casa</span></button>
       <div class="room-title" id="roomTitle" aria-live="polite"></div>
+      <button class="room-save" id="roomSave" hidden></button>
     </div>
 
     <main class="view" id="view"></main>
@@ -42,12 +43,17 @@
         <div class="sh-zh" id="shZh"></div>
         <div class="sh-py" id="shPy"></div>
         <div class="sh-tr" id="shTr"></div>
-        <button class="play" id="shPlay">🔊 Escuchar</button>
+        <div class="sh-actions">
+          <button class="play" id="shPlay">🔊 Escuchar</button>
+          <button class="play star" id="shStar" aria-pressed="false">☆ Guardar</button>
+        </div>
       </div>
     </div>
   </div>
   <script src="data.js"></script>
   <script src="search-index.js"></script>
+  <script src="sentences.js"></script>
+  <script src="flashcards.js"></script>
   <script src="search.js"></script>
   <script src="iso.js"></script>
   <script src="scene-bathroom.js"></script>
