@@ -1,13 +1,20 @@
 (function () {
-  var ROOMS = window.LABELLEARN_ROOMS;
+  var ROOMS = window.LABELLEARN_ROOMS, BY_ID = {};
+  ROOMS.forEach(function (r) { BY_ID[r.id] = r; });
+
+  // Plano de la casa (corte): filas de arriba a abajo
+  var FLOORS = [['study', 'kids', 'bedroom'], ['living', 'dining', 'kitchen'], ['entrance', 'laundry', 'bathroom']];
+  var EXTRAS = ['structure', 'misc', 'positions'];
+  var ROOF = { e: '🔺', zh: '屋顶', py: 'wūdǐng', es: 'Tejado', en: 'Roof' };
+
   var KEY = 'labellearn_prefs';
   var prefs = { lang: 'es', pinyin: true, trans: true };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   function save() { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
-  var roomsEl = $('rooms'), tabsEl = $('tabs'), titleEl = $('roomTitle'), sheet = $('sheet');
-  var current = 0, currentObj = null;
+  var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
+  var currentObj = null, currentRoom = null;
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -16,61 +23,95 @@
     return n;
   }
   function tr(o) { return prefs.lang === 'en' ? o.en : o.es; }
+  function word(c) { return { e: c[0], zh: c[1], py: c[2], es: c[3], en: c[4] }; }
 
-  function build() {
-    ROOMS.forEach(function (r, i) {
-      var room = el('section', 'room'); room.dataset.room = r.id;
-      var stage = el('div', 'stage');
-      [true, false].forEach(function (isWall) {
-        var items = r.objects.filter(function (o) { return o.wall === isWall; });
-        if (!items.length) return;
-        var zone = el('div', 'zone ' + (isWall ? 'wall' : 'floor'));
-        items.forEach(function (o) {
-          var b = el('button', 'obj'); b.type = 'button';
-          b.appendChild(el('span', 'em', o.e));
-          var tag = el('span', 'tag');
-          tag.appendChild(el('span', 'zh', o.zh));
-          tag.appendChild(el('span', 'py', o.py));
-          var t = el('span', 'tr', tr(o));
-          tag.appendChild(t);
-          b.appendChild(tag);
-          b.addEventListener('click', function () { openSheet(o); });
-          o._tr = t;
-          zone.appendChild(b);
-        });
-        stage.appendChild(zone);
-      });
-      room.appendChild(stage);
-      roomsEl.appendChild(room);
-
-      var tab = el('button', 'tab'); tab.type = 'button'; tab.setAttribute('role', 'tab');
-      tab.appendChild(el('span', 'ic', r.icon));
-      tab.appendChild(el('span', 'zh', r.zh));
-      var es = el('span', 'es', tr(r)); r._tr = es; tab.appendChild(es);
-      tab.addEventListener('click', function () { go(i); });
-      tabsEl.appendChild(tab);
+  // ---------- Vista general: casa en corte ----------
+  function tile(r, extra) {
+    var t = el('button', 'tile ' + (extra || '')); t.type = 'button'; t.dataset.room = r.id;
+    var prev = [];
+    r.cols.forEach(function (col) {
+      for (var l = 0; l < 4; l++) if (col[l]) { prev.push(col[l][0]); break; }
     });
+    t.appendChild(el('span', 't-zh', r.zh));
+    t.appendChild(el('span', 't-py', r.py));
+    var es = el('span', 't-tr', tr(r)); es.dataset.tr = r.id; t.appendChild(es);
+    t.appendChild(el('span', 't-prev', prev.slice(0, r.outdoor ? 6 : 4).join('')));
+    t.addEventListener('click', function () { location.hash = '#/' + r.id; });
+    return t;
+  }
+  function renderHouse() {
+    view.innerHTML = '';
+    var wrap = el('div', 'house');
+    var roof = el('button', 'roof'); roof.type = 'button';
+    roof.appendChild(el('span', 'r-zh', ROOF.zh));
+    roof.appendChild(el('span', 'r-py', ROOF.py));
+    var rtr = el('span', 'r-tr', tr(ROOF)); rtr.dataset.roof = '1'; roof.appendChild(rtr);
+    roof.addEventListener('click', function () { openSheet(ROOF); });
+    wrap.appendChild(roof);
+
+    var body = el('div', 'house-body');
+    FLOORS.forEach(function (row) {
+      var f = el('div', 'floor');
+      row.forEach(function (id) { f.appendChild(tile(BY_ID[id])); });
+      body.appendChild(f);
+    });
+    wrap.appendChild(body);
+    wrap.appendChild(tile(BY_ID.garden, 'wide'));
+    var ex = el('div', 'extras');
+    EXTRAS.forEach(function (id) { ex.appendChild(tile(BY_ID[id], 'extra')); });
+    wrap.appendChild(ex);
+    view.appendChild(wrap);
+    titleEl.innerHTML = '';
+    titleEl.appendChild(el('b', null, '家'));
+    titleEl.appendChild(document.createTextNode('jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa')));
+    backBtn.hidden = true;
   }
 
-  function go(i) {
-    roomsEl.scrollTo({ left: i * roomsEl.clientWidth, behavior: 'smooth' });
-  }
-  function setCurrent(i) {
-    current = i;
-    var r = ROOMS[i];
-    Array.prototype.forEach.call(tabsEl.children, function (t, j) { t.setAttribute('aria-selected', j === i); });
+  // ---------- Escena de una habitación ----------
+  function renderRoom(r) {
+    view.innerHTML = '';
+    var scene = el('div', 'scene'); scene.dataset.room = r.id;
+    if (r.outdoor) scene.classList.add('outdoor');
+    var inner = el('div', 'scene-inner');
+    inner.style.setProperty('--cols', r.cols.length);
+    r.cols.forEach(function (col, ci) {
+      col.forEach(function (c, lvl) {
+        if (!c) return;
+        var o = word(c);
+        var b = el('button', 'cell lvl' + lvl); b.type = 'button';
+        b.style.gridColumn = ci + 1; b.style.gridRow = 4 - lvl;
+        b.appendChild(el('span', 'em', o.e));
+        var tag = el('span', 'tag');
+        tag.appendChild(el('span', 'zh', o.zh));
+        tag.appendChild(el('span', 'py', o.py));
+        var t = el('span', 'tr', tr(o)); t.dataset.zh = o.zh; t.dataset.es = o.es; t.dataset.en = o.en;
+        tag.appendChild(t);
+        b.appendChild(tag);
+        b.addEventListener('click', function () { openSheet(o); });
+        inner.appendChild(b);
+      });
+    });
+    scene.appendChild(inner);
+    view.appendChild(scene);
+    scene.scrollLeft = 0;
     titleEl.innerHTML = '';
     titleEl.appendChild(el('b', null, r.zh));
     titleEl.appendChild(document.createTextNode(r.py + ' · ' + tr(r)));
+    backBtn.hidden = false;
   }
-  roomsEl.addEventListener('scroll', function () {
-    var i = Math.round(roomsEl.scrollLeft / roomsEl.clientWidth);
-    if (i !== current && ROOMS[i]) setCurrent(i);
-  }, { passive: true });
 
-  function applyPrefs() {
-    roomsEl.classList.toggle('hide-py', !prefs.pinyin);
-    roomsEl.classList.toggle('hide-tr', !prefs.trans);
+  function route() {
+    closeSheet();
+    var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
+    currentRoom = BY_ID[id] || null;
+    if (currentRoom) renderRoom(currentRoom); else renderHouse();
+    applyPrefs(true);
+  }
+
+  // ---------- Preferencias ----------
+  function applyPrefs(skipRoute) {
+    view.classList.toggle('hide-py', !prefs.pinyin);
+    view.classList.toggle('hide-tr', !prefs.trans);
     $('togPinyin').setAttribute('aria-pressed', prefs.pinyin);
     $('togTrans').setAttribute('aria-pressed', prefs.trans);
     document.documentElement.lang = prefs.lang;
@@ -79,14 +120,22 @@
     });
     $('togTrans').textContent = '译 ' + (prefs.lang === 'en' ? 'Translation' : 'Traducción');
     $('shPlay').textContent = '🔊 ' + (prefs.lang === 'en' ? 'Listen' : 'Escuchar');
-    ROOMS.forEach(function (r) {
-      r._tr.textContent = tr(r);
-      r.objects.forEach(function (o) { o._tr.textContent = tr(o); });
-    });
-    setCurrent(current);
-    if (currentObj) fillSheet(currentObj);
+    $('backTxt').textContent = prefs.lang === 'en' ? 'Home' : 'Casa';
+    if (!skipRoute) {
+      Array.prototype.forEach.call(view.querySelectorAll('.cell .tr'), function (n) {
+        n.textContent = prefs.lang === 'en' ? n.dataset.en : n.dataset.es;
+      });
+      Array.prototype.forEach.call(view.querySelectorAll('[data-tr]'), function (n) {
+        n.textContent = tr(BY_ID[n.dataset.tr]);
+      });
+      var rt = view.querySelector('[data-roof]'); if (rt) rt.textContent = tr(ROOF);
+      if (currentRoom) { titleEl.lastChild.textContent = currentRoom.py + ' · ' + tr(currentRoom); }
+      else { titleEl.lastChild.textContent = 'jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa'); }
+      if (currentObj) fillSheet(currentObj);
+    }
   }
 
+  // ---------- Ficha de objeto + audio ----------
   function speak(text) {
     if (!('speechSynthesis' in window)) return;
     var u = new SpeechSynthesisUtterance(text);
@@ -104,12 +153,12 @@
   $('shPlay').addEventListener('click', function () { if (currentObj) speak(currentObj.zh); });
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+  backBtn.addEventListener('click', function () { location.hash = '#/'; });
   $('togPinyin').addEventListener('click', function () { prefs.pinyin = !prefs.pinyin; save(); applyPrefs(); });
   $('togTrans').addEventListener('click', function () { prefs.trans = !prefs.trans; save(); applyPrefs(); });
   Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
     b.addEventListener('click', function () { prefs.lang = b.dataset.lang; save(); applyPrefs(); });
   });
-
-  build();
-  applyPrefs();
+  window.addEventListener('hashchange', route);
+  route();
 })();
