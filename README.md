@@ -6,6 +6,9 @@ Casa en corte (estilo dollhouse) para aprender vocabulario en chino mandarín. C
 - **Las 13 secciones son escenas isométricas 2.5D** estilo Los Sims (9 habitaciones, el patio y 3 extras: estructura de la casa, objetos pequeños y posiciones), con zoom y desplazamiento táctil.
 - La vista lateral anterior (`renderRoom` en `app.js`) queda solo como respaldo para una sección que no tenga escena.
 
+- **Buscador:** la lupa de la pantalla de la casa busca por hanzi, pinyin (con o sin tonos) o traducción (ES/EN), y también por nombre de habitación. Una palabra que está en una sola habitación lleva directo a ella y la resalta; si está en varias, deja elegir.
+- **Instalable (PWA):** `manifest.webmanifest`, íconos (`icon.svg`, PNG) y `sw.js` (abre sin conexión).
+
 ## Ejecutar
 
     python3 -m http.server 8000   # y abrir http://localhost:8000
@@ -24,3 +27,9 @@ Casa en corte (estilo dollhouse) para aprender vocabulario en chino mandarín. C
 - `scene-<habitación>.js` (13 archivos): una escena por sección, con medidas reales (1 unidad = 10 cm). Cada pieza declara su palabra, su orden de profundidad y, si es pequeña, un punto táctil.
 - `iso-view.js`: cámara (arrastrar, pellizcar, rueda), selección con resalte, puntos táctiles y etiquetas.
 - Para sumar una habitación: crear `scene-<id>.js` que registre `window.LABELLEARN_SCENES.<id>` e incluirlo en `index.html`. La vista se activa sola.
+
+## Búsqueda e íconos
+
+- `search-index.js` es **generado** (`node tools/build_index.js`): para cada palabra, las habitaciones donde aparece en una escena. Volver a correrlo al cambiar escenas.
+- `search.js`: el buscador. `app.js` solo lo monta en la pantalla de la casa.
+- Íconos: `icon.svg` es la fuente; `node tools/make_icons.js` regenera los PNG.

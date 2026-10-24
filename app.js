@@ -14,7 +14,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
-  var currentObj = null, currentRoom = null, iso = null;
+  var currentObj = null, currentRoom = null, iso = null, search = null, pendingSelect = null;
   var WORDS = {};   // hanzi -> palabra (el baño tiene prioridad, luego el resto del vocabulario)
   [BY_ID.bathroom].concat(ROOMS).forEach(function (r) {
     r.cols.forEach(function (col) { col.forEach(function (c) { if (c && !WORDS[c[1]]) WORDS[c[1]] = word(c); }); });
@@ -51,6 +51,11 @@
     roof.appendChild(el('span', 'r-py', ROOF.py));
     var rtr = el('span', 'r-tr', tr(ROOF)); rtr.dataset.roof = '1'; roof.appendChild(rtr);
     roof.addEventListener('click', function () { openSheet(ROOF); });
+    search = window.LabelSearch.create({
+      rooms: ROOMS, byId: BY_ID, lang: function () { return prefs.lang; },
+      go: function (roomId, zh) { pendingSelect = zh; location.hash = '#/' + roomId; }
+    });
+    wrap.appendChild(search.bar);
     wrap.appendChild(roof);
 
     var body = el('div', 'house-body');
@@ -65,6 +70,7 @@
     EXTRAS.forEach(function (id) { ex.appendChild(tile(BY_ID[id], 'extra')); });
     wrap.appendChild(ex);
     view.appendChild(wrap);
+    view.appendChild(search.overlay);
     titleEl.innerHTML = '';
     titleEl.appendChild(el('b', null, '家'));
     titleEl.appendChild(document.createTextNode('jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa')));
@@ -126,11 +132,16 @@
     titleEl.appendChild(el('b', null, r.zh));
     titleEl.appendChild(document.createTextNode(r.py + ' · ' + tr(r)));
     backBtn.hidden = false;
+    if (pendingSelect) {   // llegada desde el buscador: resaltar la palabra buscada
+      var w = pendingSelect; pendingSelect = null;
+      setTimeout(function () { if (iso && iso.has(w)) iso.select(w); }, 650);
+    }
   }
 
   function route() {
     closeSheet();
     if (iso) { iso.destroy(); iso = null; }
+    search = null;
     var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
     currentRoom = BY_ID[id] || null;
     var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
@@ -165,6 +176,7 @@
       if (currentObj) fillSheet(currentObj);
     }
     if (iso) iso.refreshLabels();
+    if (search) search.refresh();
   }
 
   // ---------- Ficha de objeto + audio ----------
@@ -193,4 +205,7 @@
   });
   window.addEventListener('hashchange', route);
   route();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () { try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {} });
+  }
 })();

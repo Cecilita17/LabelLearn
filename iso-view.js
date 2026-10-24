@@ -190,6 +190,7 @@
       refreshLabels: refreshLabels,
       deselect: clearSel,
       has: function (w) { return !!anchors[w]; },
+      select: select,
       words: function () { return Object.keys(anchors); },
       destroy: function () { cancelAnimationFrame(raf); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp); }
     };

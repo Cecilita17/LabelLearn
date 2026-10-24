@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#e4572e"/>
+  <g transform="translate(256 262) scale(1.32) translate(-256 -240)">
+  <ellipse cx="256" cy="352" rx="118" ry="30" fill="rgba(0,0,0,.18)"/>
+  <polygon points="156,288 256,230 356,288 256,346" fill="#ffd9a8"/>
+  <polygon points="156,288 256,230 256,120 156,178" fill="#fff7ec"/>
+  <polygon points="256,230 356,288 356,178 256,120" fill="#f1d3b0"/>
+  <polygon points="156,288 256,346 256,356 156,298" fill="#c8864f"/>
+  <polygon points="256,346 356,288 356,298 256,356" fill="#a56a39"/>
+  <g transform="matrix(.866 -.5 0 1 156 178)"><rect x="18" y="22" width="64" height="52" rx="4" fill="#bfe3f2"/><rect x="48" y="22" width="4" height="52" fill="#fff7ec"/><rect x="18" y="46" width="64" height="4" fill="#fff7ec"/></g>
+  <g transform="matrix(.866 .5 0 1 256 120)">
+    <rect x="14" y="20" width="76" height="66" rx="8" fill="#ffffff"/>
+    <text x="52" y="72" font-family="'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="52" font-weight="800" text-anchor="middle" fill="#e4572e">家</text>
+  </g>
+  </g>
+</svg>
