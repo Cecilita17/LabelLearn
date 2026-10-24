@@ -118,9 +118,18 @@
       clearSel(); allByWord(w).forEach(function (n) { n.classList.add('sel'); });
       ctx.onSelect(w); setTimeout(function () { ensureVisible(w); }, 30);
     }
+    function nearestDot(cx, cy) {
+      var best = null, bd = 1e9;
+      Array.prototype.forEach.call(dotsG.children, function (g) {
+        var r = g.querySelector('.dot-core').getBoundingClientRect(), d = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2));
+        if (d < bd) { bd = d; best = g; }
+      });
+      return bd <= 16 ? best : null;
+    }
     svg.addEventListener('click', function (e) {
       if (moved) { moved = false; return; }
       var n = e.target.closest ? e.target.closest('[data-w]') : null;
+      if (n && n.classList.contains('dot')) n = nearestDot(e.clientX, e.clientY) || n;   // en grupos apretados gana el punto más cercano al dedo
       if (n) select(n.getAttribute('data-w')); else { clearSel(); ctx.onDeselect(); }
     });
 
