@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff7ec">
+  <title>LabelLearn</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="logo">Label<span>Learn</span></div>
+      <div class="seg" role="group" aria-label="Idioma de traducción">
+        <button data-lang="es" aria-pressed="true">ES</button>
+        <button data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </header>
+
+    <div class="room-title" id="roomTitle" aria-live="polite"></div>
+
+    <main class="rooms" id="rooms"></main>
+
+    <div class="toggles">
+      <button class="chip" id="togPinyin" aria-pressed="true">拼 Pinyin</button>
+      <button class="chip" id="togTrans" aria-pressed="true">译 Traducción</button>
+    </div>
+
+    <nav class="tabs" id="tabs" aria-label="Habitaciones"></nav>
+
+    <div class="sheet" id="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="shZh">
+        <button class="sheet-close" id="shClose" aria-label="Cerrar">×</button>
+        <div class="sh-emoji" id="shEmoji"></div>
+        <div class="sh-zh" id="shZh"></div>
+        <div class="sh-py" id="shPy"></div>
+        <div class="sh-tr" id="shTr"></div>
+        <button class="play" id="shPlay">🔊 Escuchar</button>
+      </div>
+    </div>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
