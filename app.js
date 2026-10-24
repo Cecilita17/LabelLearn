@@ -14,7 +14,11 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
-  var currentObj = null, currentRoom = null;
+  var currentObj = null, currentRoom = null, iso = null;
+  var WORDS = {};   // hanzi -> palabra (el baño tiene prioridad, luego el resto del vocabulario)
+  [BY_ID.bathroom].concat(ROOMS).forEach(function (r) {
+    r.cols.forEach(function (col) { col.forEach(function (c) { if (c && !WORDS[c[1]]) WORDS[c[1]] = word(c); }); });
+  });
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -100,11 +104,37 @@
     backBtn.hidden = false;
   }
 
+  // ---------- Habitación isométrica (escena 2.5D) ----------
+  function renderIso(r) {
+    view.innerHTML = '';
+    var host = el('div', 'iso');
+    view.appendChild(host);
+    var scene = window.LABELLEARN_SCENES[r.id](window.ISO), core = {};
+    r.cols.forEach(function (col) { col.forEach(function (c) { if (c) core[c[1]] = true; }); });
+    iso = window.IsoView.mount(host, scene, {
+      title: r.zh + ' ' + tr(r),
+      onSelect: function (w) { if (WORDS[w]) openSheet(WORDS[w], true); },
+      onDeselect: function () { closeSheet(); },
+      isCore: function (w) { return core[w]; },
+      labelLines: function (w) {
+        var o = WORDS[w]; if (!o) return null;
+        var l = [o.zh]; if (prefs.pinyin) l.push(o.py); if (prefs.trans) l.push(tr(o)); return l;
+      }
+    });
+    titleEl.innerHTML = '';
+    titleEl.appendChild(el('b', null, r.zh));
+    titleEl.appendChild(document.createTextNode(r.py + ' · ' + tr(r)));
+    backBtn.hidden = false;
+  }
+
   function route() {
     closeSheet();
+    if (iso) { iso.destroy(); iso = null; }
     var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
     currentRoom = BY_ID[id] || null;
-    if (currentRoom) renderRoom(currentRoom); else renderHouse();
+    var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
+    view.classList.toggle('iso-view', isIso);
+    if (isIso) renderIso(currentRoom); else if (currentRoom) renderRoom(currentRoom); else renderHouse();
     applyPrefs(true);
   }
 
@@ -133,6 +163,7 @@
       else { titleEl.lastChild.textContent = 'jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa'); }
       if (currentObj) fillSheet(currentObj);
     }
+    if (iso) iso.refreshLabels();
   }
 
   // ---------- Ficha de objeto + audio ----------
@@ -146,8 +177,8 @@
     $('shEmoji').textContent = o.e; $('shZh').textContent = o.zh;
     $('shPy').textContent = o.py; $('shTr').textContent = tr(o);
   }
-  function openSheet(o) { currentObj = o; fillSheet(o); sheet.hidden = false; $('shClose').focus(); speak(o.zh); }
-  function closeSheet() { sheet.hidden = true; currentObj = null; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+  function openSheet(o, keepFocus) { currentObj = o; fillSheet(o); sheet.hidden = false; if (!keepFocus) $('shClose').focus(); speak(o.zh); }
+  function closeSheet() { sheet.hidden = true; currentObj = null; if (iso) iso.deselect(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 
   $('shClose').addEventListener('click', closeSheet);
   $('shPlay').addEventListener('click', function () { if (currentObj) speak(currentObj.zh); });

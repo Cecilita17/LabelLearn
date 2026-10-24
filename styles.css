@@ -119,16 +119,34 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
-/* Ficha de objeto */
-.sheet { position: absolute; inset: 0; z-index: 10; background: rgba(20,12,4,.45); display: flex; align-items: flex-end; animation: fade .15s; }
+/* Ficha de objeto: tarjeta inferior que no tapa la escena y permite seguir tocando objetos */
+.sheet { position: absolute; inset: 0; z-index: 10; background: transparent; pointer-events: none; display: flex; align-items: flex-end; }
 .sheet[hidden] { display: none; }
-.sheet-card { position: relative; width: 100%; background: var(--card); border-radius: 24px 24px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom)); text-align: center; animation: up .2s ease-out; }
-.sheet-close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--bg); font-size: 22px; line-height: 1; }
-.sh-emoji { font-size: 64px; line-height: 1.1; }
-.sh-zh { font-size: 44px; font-weight: 800; }
-.sh-py { font-size: 20px; color: var(--accent); font-weight: 600; margin-top: 2px; }
-.sh-tr { font-size: 18px; color: var(--muted); margin: 6px 0 16px; }
-.play { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 12px 24px; border-radius: 999px; font-size: 16px; }
+.sheet-card { position: relative; width: 100%; background: var(--card); border-radius: 22px 22px 0 0; padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); text-align: center; pointer-events: auto; box-shadow: 0 -6px 24px rgba(40,20,0,.22); animation: up .2s ease-out; }
+.sheet-close { position: absolute; top: 8px; right: 10px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--bg); font-size: 22px; line-height: 1; }
+.sh-emoji { font-size: 34px; line-height: 1.1; }
+.sh-zh { font-size: 38px; font-weight: 800; line-height: 1.15; }
+.sh-py { font-size: 19px; color: var(--accent); font-weight: 600; margin-top: 1px; }
+.sh-tr { font-size: 17px; color: var(--muted); margin: 4px 0 12px; }
+.play { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 11px 24px; border-radius: 999px; font-size: 16px; }
 @keyframes up { from { transform: translateY(40px); opacity: 0; } }
-@keyframes fade { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .sheet, .sheet-card { animation: none; } }
+@keyframes isoIn { from { opacity: 0; transform: scale(.96); } }
+@keyframes dotpulse { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .sheet-card, .iso { animation: none; } .dot-core { animation: none; } }
+
+/* ---------- Habitación isométrica 2.5D ---------- */
+.iso { position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; animation: isoIn .45s ease-out;
+  background: radial-gradient(ellipse at 50% 42%, #fff8ea 0, #f3e5cb 58%, #e2cdab 100%); }
+.iso-svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+.iso-svg .hit, .iso-svg .dot-hit { fill: transparent; pointer-events: all; }
+.iso-svg .deco, .iso-svg .lbl { pointer-events: none; }
+.iso-svg .obj, .iso-svg .dot { cursor: pointer; }
+.iso-svg .obj.sel { filter: drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 3px #ffb703) brightness(1.1); }
+.iso-svg .dot-core { fill: #fff; stroke: #e4572e; stroke-width: 1.2; animation: dotpulse 2.2s ease-in-out infinite; }
+.iso-svg .dot.sel .dot-core { fill: #ffb703; animation: none; }
+.iso-svg.nodots .dots { display: none; }
+.lbl rect { fill: rgba(255,255,255,.95); stroke: rgba(0,0,0,.18); stroke-width: .5; }
+.lbl .t0 { font-weight: 800; fill: #2b2118; } .lbl .t1 { fill: #b23a16; font-weight: 600; } .lbl .t2 { fill: #6a5a4b; }
+.iso-tools { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.iso-tools button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(0,0,0,.15); background: rgba(255,255,255,.92); color: #2b2118; font-size: 18px; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.iso-tools button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
