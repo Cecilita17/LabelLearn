@@ -14,7 +14,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
-  var currentObj = null, currentRoom = null, iso = null, search = null, pendingSelect = null;
+  var currentObj = null, currentRoom = null, iso = null, search = null, roomSearch = null, pendingSelect = null;
   var WORDS = {};   // hanzi -> palabra (el baño tiene prioridad, luego el resto del vocabulario)
   [BY_ID.bathroom].concat(ROOMS).forEach(function (r) {
     r.cols.forEach(function (col) { col.forEach(function (c) { if (c && !WORDS[c[1]]) WORDS[c[1]] = word(c); }); });
@@ -120,6 +120,7 @@
     function lookup(w) { return local[w] || WORDS[w]; }
     iso = window.IsoView.mount(host, scene, {
       title: r.zh + ' ' + tr(r),
+      onSearch: function () { if (roomSearch) { closeSheet(); roomSearch.open(); } },
       onSelect: function (w) { if (lookup(w)) openSheet(lookup(w), true); },
       onDeselect: function () { closeSheet(); },
       isCore: function (w) { return core[w]; },
@@ -128,20 +129,25 @@
         var l = [o.zh]; if (prefs.pinyin) l.push(o.py); if (prefs.trans) l.push(tr(o)); return l;
       }
     });
+    roomSearch = window.LabelSearch.create({
+      rooms: ROOMS, byId: BY_ID, lang: function () { return prefs.lang; }, scope: iso.words(), roomId: r.id,
+      pick: function (zh) { iso.find(zh); }
+    });
+    view.appendChild(roomSearch.overlay);
     titleEl.innerHTML = '';
     titleEl.appendChild(el('b', null, r.zh));
     titleEl.appendChild(document.createTextNode(r.py + ' · ' + tr(r)));
     backBtn.hidden = false;
     if (pendingSelect) {   // llegada desde el buscador: resaltar la palabra buscada
       var w = pendingSelect; pendingSelect = null;
-      setTimeout(function () { if (iso && iso.has(w)) iso.select(w); }, 650);
+      setTimeout(function () { if (iso && iso.has(w)) iso.find(w); }, 650);
     }
   }
 
   function route() {
     closeSheet();
     if (iso) { iso.destroy(); iso = null; }
-    search = null;
+    search = null; roomSearch = null;
     var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
     currentRoom = BY_ID[id] || null;
     var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
@@ -177,6 +183,7 @@
     }
     if (iso) iso.refreshLabels();
     if (search) search.refresh();
+    if (roomSearch) roomSearch.refresh();
   }
 
   // ---------- Ficha de objeto + audio ----------

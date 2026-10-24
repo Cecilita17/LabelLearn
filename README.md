@@ -7,6 +7,7 @@ Casa en corte (estilo dollhouse) para aprender vocabulario en chino mandarín. C
 - La vista lateral anterior (`renderRoom` en `app.js`) queda solo como respaldo para una sección que no tenga escena.
 
 - **Buscador:** la lupa de la pantalla de la casa busca por hanzi, pinyin (con o sin tonos) o traducción (ES/EN), y también por nombre de habitación. Una palabra que está en una sola habitación lleva directo a ella y la resalta; si está en varias, deja elegir.
+- **Búsqueda dentro de cada habitación:** el botón de lupa junto al zoom abre un buscador limitado a las palabras de esa escena (vacío lista todas); al elegir una, la cámara se acerca al objeto y lo resalta.
 - **Instalable (PWA):** `manifest.webmanifest`, íconos (`icon.svg`, PNG) y `sw.js` (abre sin conexión).
 
 ## Ejecutar

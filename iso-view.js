@@ -22,6 +22,7 @@
       '<svg class="iso-svg" viewBox="' + vb.join(' ') + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + ctx.title + '">' +
       '<defs>' + I.defs.join('') + '</defs><g class="cam"><g class="world">' + body + '</g><g class="dots">' + dots + '</g><g class="lbls"></g></g></svg>' +
       '<div class="iso-tools">' +
+      '<button type="button" data-t="search" aria-label="Buscar en esta habitación"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15.4 15.4L21 21" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></button>' +
       '<button type="button" data-t="in" aria-label="Acercar">+</button>' +
       '<button type="button" data-t="out" aria-label="Alejar">−</button>' +
       '<button type="button" data-t="reset" aria-label="Vista completa">⤢</button>' +
@@ -126,6 +127,13 @@
       });
       return bd <= 16 ? best : null;
     }
+    // Lleva la cámara al objeto (acercando si hace falta), lo resalta y abre su tarjeta
+    function find(w) {
+      var a = anchors[w]; if (!a) return;
+      select(w);
+      var r = svg.getBoundingClientRect(), k = Math.max(cur.k, 2.4), p = toVB(r.left + r.width / 2, r.top + r.height * 0.36);
+      setTimeout(function () { animate({ k: k, tx: p.x - a[0] * k, ty: p.y - a[1] * k }, 520); }, 60);
+    }
     svg.addEventListener('click', function (e) {
       if (moved) { moved = false; return; }
       var n = e.target.closest ? e.target.closest('[data-w]') : null;
@@ -176,7 +184,8 @@
     // ---------- herramientas ----------
     host.querySelector('.iso-tools').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return; var t = b.dataset.t, c = center();
-      if (t === 'in') zoomAt(c[0], c[1], 1.5, true);
+      if (t === 'search') { if (ctx.onSearch) ctx.onSearch(); }
+      else if (t === 'in') zoomAt(c[0], c[1], 1.5, true);
       else if (t === 'out') zoomAt(c[0], c[1], 1 / 1.5, true);
       else if (t === 'reset') animate({ k: 1, tx: 0, ty: 0 }, 350);
       else if (t === 'dots') { var on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); svg.classList.toggle('nodots', !on); }
@@ -191,6 +200,7 @@
       deselect: clearSel,
       has: function (w) { return !!anchors[w]; },
       select: select,
+      find: find,
       words: function () { return Object.keys(anchors); },
       destroy: function () { cancelAnimationFrame(raf); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp); }
     };
