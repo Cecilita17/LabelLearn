@@ -109,15 +109,16 @@
     view.innerHTML = '';
     var host = el('div', 'iso');
     view.appendChild(host);
-    var scene = window.LABELLEARN_SCENES[r.id](window.ISO), core = {};
-    r.cols.forEach(function (col) { col.forEach(function (c) { if (c) core[c[1]] = true; }); });
+    var scene = window.LABELLEARN_SCENES[r.id](window.ISO), core = {}, local = {};
+    r.cols.forEach(function (col) { col.forEach(function (c) { if (c) { core[c[1]] = true; local[c[1]] = word(c); } }); });
+    function lookup(w) { return local[w] || WORDS[w]; }
     iso = window.IsoView.mount(host, scene, {
       title: r.zh + ' ' + tr(r),
-      onSelect: function (w) { if (WORDS[w]) openSheet(WORDS[w], true); },
+      onSelect: function (w) { if (lookup(w)) openSheet(lookup(w), true); },
       onDeselect: function () { closeSheet(); },
       isCore: function (w) { return core[w]; },
       labelLines: function (w) {
-        var o = WORDS[w]; if (!o) return null;
+        var o = lookup(w); if (!o) return null;
         var l = [o.zh]; if (prefs.pinyin) l.push(o.py); if (prefs.trans) l.push(tr(o)); return l;
       }
     });
