@@ -3,7 +3,7 @@
   function create() {
     var I=window.ISO,G=window.SupermarketGeometry,L=window.SupermarketLayout,V=window.SupermarketVocab;
     var sc=new I.Scene(L.width,L.depth,28), b=I.box, ln=I.line, gr=G.ground;
-    sc.camera={min:.85,max:10,screenSize:true,ground:true,findZoom:5.5};
+    sc.camera={min:.85,max:10,screenSize:true,ground:true,findZoom:5.5,cull:true,scopedDots:true,dotHitsOnly:true};
     sc.marketWords={};sc.marketMeta={};G.models();
     sc.viewBox=function(){return [-700,-155,1480,1030];};
     function deco(k,s){sc.add(null,k,s);}
@@ -27,14 +27,9 @@
     // Secciones: sus superficies o muebles permiten acercarse sin abrir una ficha.
     L.zones.forEach(function(z){
       var svg='',a=[z.x+z.w/2,z.y+z.d/2,8],k=z.x+z.y+z.w/2+z.d/2;
+      if(window.SupermarketProducts.zones.indexOf(z.id)>=0){window.SupermarketFreshScene.build(z,add,deco);return;}
       if(z.stock)svg=G.gondola(z);
-      else if(['bakery','butcher','fish','deli'].indexOf(z.id)>=0)svg=G.fresh(z,{bakery:'bread',butcher:'meat',fish:'fish-product',deli:'ham'}[z.id]);
-      else if(['dairy','eggs','frozen'].indexOf(z.id)>=0)svg=G.chilled(z,{dairy:'milk',eggs:'egg-carton',frozen:'ice-cream'}[z.id]);
-      else if(z.id==='produce'){
-        svg=b(z.x,z.y,0,z.x+z.w,z.y+z.d,5,G.C.wood)+b(z.x,z.y,5,z.x+z.w,z.y+z.d,5.5,'#817f61');
-        for(var row=0;row<4;row++)for(var col=0;col<4;col++)svg+=G.use(row<2?'apple':'carrot',z.x+1+col*5,z.y+1+row*4,5.6);
-        svg+=G.poleSign(V.produce.zh,'Frutas y verduras',z.x+z.w/2,z.y,21,24,z.color);
-      }else if(z.id==='service')svg=b(4,117,0,25,127,9,z.color)+b(3.5,116.5,9,25.5,127.5,9.7,G.C.wood)+G.monitor(16,121,12,false)+G.poleSign(V.service.zh,'Atención',14,117,22,24,z.color);
+      else if(z.id==='service')svg=b(4,117,0,25,127,9,z.color)+b(3.5,116.5,9,25.5,127.5,9.7,G.C.wood)+G.monitor(16,121,12,false)+G.poleSign(V.service.zh,'Atención',14,117,22,24,z.color);
       else {
         k=-85;
         if(z.id==='checkout'||z.id==='selfcheckout')svg=gr(z.x,z.y,z.w,z.d,.04,z.id==='checkout'?'#d6dfcf':'#d0dfd8');
@@ -55,7 +50,7 @@
     var poster=ln([29,134,0],[29,134,14],'#81937e',1.7)+G.sign('本周特价','Ofertas de la semana',29,134,10,13,'#bd9569');
     add('promotion','promotion','entry',163,poster,[29,134,13],true);
     // Productos representativos en muebles ya abastecidos: una zona táctil, sin duplicar stock.
-    var products=[['produce','apple',[32.2,110.4,7]],['produce','carrot',[37,121,6]],['bakery','bread',[11.5,14,10]],['butcher','meat',[50.5,14,9.5]],['fish','fish-product',[90,14,9.5]],['deli','ham',[128.5,14,10]],['dairy','milk',[10,29,7]],['eggs','egg-carton',[10,52,4]],['frozen','ice-cream',[9,73,5]]];
+    var products=[];
     L.zones.filter(function(z){return z.stock;}).forEach(function(z){products.push([z.id,z.stock,[z.x+8,z.y+2.5,12.5]]);});
     products.forEach(function(p){add('product-'+p[1],p[1],p[0],p[2][0]+p[2][1]+2,'',p[2],true);});
     // Dos cajas completas. Las piezas conservan sus IDs y posiciones por caja.

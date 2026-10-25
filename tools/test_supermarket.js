@@ -14,7 +14,7 @@ async function main(){
    await p.locator('[data-t="search"]').tap();await p.locator('.city-search input').fill('supermercado');await p.locator('.city-search .s-item').tap();await p.waitForTimeout(700);
    await p.locator('#shSupermarket').tap();await p.waitForTimeout(550);
    var storage=await p.evaluate(function(){return localStorage.getItem('labellearn_flashcards_v1');});
-   assert.equal(await p.locator('.supermarket .obj').count(),120);
+   assert.equal(await p.locator('.supermarket .obj').count(),await p.evaluate(function(){return Object.keys(window.SupermarketScene.create().marketMeta).length;}));
    var suffix=size.join('x');
    async function shot(n){await p.screenshot({path:path.join(output,n+'-'+suffix+'.png')});}
    async function zone(id){await p.locator('.market-nav select').selectOption(id);await p.waitForTimeout(480);}

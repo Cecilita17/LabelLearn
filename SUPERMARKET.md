@@ -1,6 +1,6 @@
 # Supermercado — primera maqueta interior
 
-Implementación local sobre `main`, sin push ni despliegue. Se entra desde la
+Interior publicado desde `main`. La ampliación de frescos se documenta en [FRESH.md](FRESH.md). Se entra desde la
 ficha del supermercado existente en la ciudad, con un enlace a `#/supermarket`.
 El botón Ciudad vuelve al mapa. El resto de la ciudad conserva su geometría.
 
@@ -51,7 +51,8 @@ y traducción ES/EN. Los objetos repetidos se identifican por caja o terminal.
 Los puntos táctiles se limitan a la sección activa. Las etiquetas son opcionales,
 se filtran por zona y no repiten el mismo término por cada instancia.
 
-`supermarket-vocab.js` es la fuente manual independiente de **81 términos**:
+`supermarket-vocab.js` es la fuente base de la primera entrega (**81 términos**).
+El catálogo actual se amplía a 174 mediante `supermarket-products.js`:
 
 - 25 secciones de la planta.
 - 45 sustantivos: puerta automática, carrito, canasto, cartel, manzana,
@@ -88,7 +89,9 @@ La caché es `labellearn-v6`; index y SHELL incluyen los seis archivos nuevos.
 No se reconstruye la geometría durante el desplazamiento ni se agregan listeners
 individuales a los objetos.
 
-## Verificación
+## Verificación de la primera entrega (histórica)
+
+Los resultados actuales de la ampliación se documentan en FRESH.md.
 
 - `node tools/check_supermarket.js`: 25 secciones, 95 objetos físicos, 120 IDs
   de selección, geometría determinista y finita, modelos sin defs duplicadas,
@@ -114,12 +117,10 @@ Resultados completos: `/workspace/supermarket-review/final/result.json`.
 
 ## Pendiente
 
-Más variedad de productos, detalle propio de los mostradores de frescos y
-refrigerados, precios y señalética comercial adicional. Las otras secciones
-son representativas; cajas y autopago concentran el detalle de esta entrega.
+La ampliación completa de frescos y refrigerados figura en FRESH.md. Los pasillos
+de almacén, limpieza e higiene conservan sus productos representativos originales.
 No se implementaron inventario, compra, pago real, simulación ni nuevos interiores.
 
 La pronunciación usa el motor existente; este Chromium no tiene voces instaladas,
 por lo que no se acreditó la escucha real. Queda también la comprobación de
-rendimiento y gestos en un dispositivo Android físico. No se publicará esta
-maqueta hasta la revisión y autorización del usuario.
+rendimiento y gestos en un dispositivo Android físico. La publicación de la segunda etapa fue autorizada una vez pasadas las verificaciones.

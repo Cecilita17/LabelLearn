@@ -92,7 +92,7 @@ guarda capturas, tiempos de cuadro con CPU 4× y recuentos de memoria en
 `audit.json`. Observa la API original de pronunciación sin reemplazar la síntesis.
 La emulación no sustituye la escucha con voz zh-CN ni una prueba en Android real.
 
-## Supermercado (interior local)
+## Supermercado
 
 En la ciudad, seleccioná **Supermercado** y tocá **Entrar al supermercado**.
 La ruta es `#/supermarket`; **Ciudad** vuelve al mapa. No duplica escenas de la casa.
@@ -113,7 +113,7 @@ El resto de los productos es representativo, no un catálogo exhaustivo.
   Las fichas y el audio son los originales; no se agregan flashcards ni oraciones.
 
 Código separado: `supermarket-layout.js` (planta), `supermarket-vocab.js`
-(81 términos: 25 secciones, 45 objetos y 11 acciones), `supermarket-geometry.js`
+(base de vocabulario, ampliada por el catálogo de productos), `supermarket-geometry.js`
 (modelos), `supermarket-scene.js` (montaje y selección), `supermarket-view.js`
 (interacciones) y `supermarket.css` (estilos propios). Los modelos repetidos se
 comparten en `<defs>/<use>` y no se reconstruyen durante los gestos.
@@ -123,3 +123,31 @@ Con el servidor local de Python activo:
 `node tools/test_supermarket.js /tmp/labellearn-supermarket`.
 El test usa Chromium con sandbox, revisa cuatro resoluciones y genera capturas.
 Detalle de la entrega y límites: [SUPERMARKET.md](SUPERMARKET.md).
+
+### Frescos y refrigerados
+
+La segunda etapa incorpora **66 tipos adicionales**: hay 75 tipos de producto
+individualizados en frutas/verduras, panadería, carnicería, pescadería, fiambrería,
+lácteos, huevos y congelados. Cada tipo tiene su ficha, pronunciación y punto de
+selección. Las presentaciones de queso comparten el mismo término. El vocabulario
+del supermercado suma **174 términos**, sin modificar los datos de la casa.
+
+La pestaña **Envases y medidas** incluye botella, caja, lata, bolsa, paquete,
+bandeja, kilo, medio kilo, litro, precio por kilo, fresco y congelado. No agrega
+flashcards. Precios y carteles son ilustrativos.
+
+- `supermarket-products.js`: catálogo, vocabulario nuevo y referencias estables.
+- `supermarket-fresh-geometry.js`: modelos y precios vectoriales compartidos.
+- `supermarket-fresh-scene.js`: exhibidores, heladeras, freezers y accesorios.
+
+El visor omite grupos fuera de pantalla y evita actualizar puntos ocultos; los
+límites se calculan una vez, sin reconstruir los modelos durante los gestos.
+Estas opciones solo se activan en el supermercado. Los puntos táctiles y las
+formas visibles seleccionan los productos sin círculos invisibles superpuestos
+sobre las bandejas vecinas.
+
+Validación adicional: `node tools/check_fresh.js`. Prueba completa del catálogo:
+`node tools/test_fresh.js /tmp/labellearn-fresh` con el servidor local iniciado.
+`tools/fixtures/supermarket-protected.json` conserva huellas de los 103 elementos
+no ampliados de la versión fd9cfd5, para comprobar que no cambien las cajas, los
+autopagos, los pasillos ni la entrada.
