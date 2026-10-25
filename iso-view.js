@@ -153,7 +153,7 @@
     function find(w) {
       var a = anchors[w]; if (!a) return;
       select(w);
-      var r = svg.getBoundingClientRect(), k = Math.max(cur.k, 2.4), p = toVB(r.left + r.width / 2, r.top + r.height * 0.36);
+      var r = svg.getBoundingClientRect(), k = Math.max(cur.k, camera.findZoom || 2.4), p = toVB(r.left + r.width / 2, r.top + r.height * 0.36);
       setTimeout(function () { animate({ k: k, tx: p.x - a[0] * k, ty: p.y - a[1] * k }, 520); }, 60);
     }
     svg.addEventListener('click', function (e) {
@@ -227,6 +227,9 @@
     apply({ k: 0.9, tx: vw * 0.05, ty: vh * 0.05 }); animate({ k: 1, tx: 0, ty: 0 }, 450);
 
     return {
+      // Enfoque silencioso de una zona; el flujo de las habitaciones no lo utiliza.
+      focus: function (a, k) { var p = I.P(a[0], a[1], a[2]), c = center(), v = toVB(c[0], c[1]); animate({ k: k, tx: v.x - p[0] * k, ty: v.y - p[1] * k }, 420); },
+      reset: function () { animate({ k: 1, tx: 0, ty: 0 }, 350); },
       refreshLabels: refreshLabels,
       deselect: clearSel,
       has: function (w) { return !!anchors[w]; },

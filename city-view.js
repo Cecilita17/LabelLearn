@@ -24,7 +24,7 @@
     }
     var iso=window.IsoView.mount(host,scene,{
       title:'城市 · Ciudad',onSearch:function(){ctx.closeSheet();previous=document.activeElement;results();ov.hidden=false;input.focus();},
-      onSelect:function(id){var w=words[id];if(w)ctx.openSheet(Object.assign({},w,{cityHome:id==='home'||id.indexOf('home-')===0}),true);},
+      onSelect:function(id){var w=words[id];if(w)ctx.openSheet(Object.assign({},w,{cityHome:id==='home'||id.indexOf('home-')===0,enterSupermarket:id==='supermarket'}),true);},
       onDeselect:ctx.closeSheet,isCore:function(){return true;},
       labelLines:function(id){var w=words[id],lines=[w.zh];if(ctx.prefs.pinyin)lines.push(w.py);if(ctx.prefs.trans)lines.push(ctx.tr(w));return lines;}
     });

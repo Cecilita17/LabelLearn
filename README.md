@@ -64,7 +64,7 @@ y tocar edificios u objetos. La lupa urbana lista también los objetos pequeños
 y permite enfocarlos. La cámara del mapa admite hasta 10× y límites basados en
 su viewBox, incluido el origen negativo. Las habitaciones conservan sus límites
 anteriores. Los árboles comparten un símbolo SVG y la selección usa delegación.
-No hay geometría nueva durante el desplazamiento ni interiores o tráfico animado.
+No hay geometría nueva durante el desplazamiento ni tráfico animado.
 Las fichas y la pronunciación son las originales. El vocabulario urbano no agrega
 oraciones ni entra en el mazo de flashcards.
 
@@ -91,3 +91,35 @@ las 55 zonas seleccionables, límites de cámara, encuadre y cobertura de etique
 guarda capturas, tiempos de cuadro con CPU 4× y recuentos de memoria en
 `audit.json`. Observa la API original de pronunciación sin reemplazar la síntesis.
 La emulación no sustituye la escucha con voz zh-CN ni una prueba en Android real.
+
+## Supermercado (interior local)
+
+En la ciudad, seleccioná **Supermercado** y tocá **Entrar al supermercado**.
+La ruta es `#/supermarket`; **Ciudad** vuelve al mapa. No duplica escenas de la casa.
+
+La planta de 18 × 16 m tiene entrada automática y atención al cliente,
+25 secciones, seis góndolas paralelas separadas por pasillos de 1,4 m, frescos
+al fondo, refrigerados en el lateral y cajas en el frente. Incluye dos cajas
+tradicionales y cuatro terminales de autoservicio con componentes individuales.
+El resto de los productos es representativo, no un catálogo exhaustivo.
+
+- **Plano → sección → objeto:** seleccionar un mueble o usar el selector de zonas;
+  los accesos rápidos llevan a cajas y autoservicio. Arrastrar, pellizcar y usar
+  +/− funciona con el visor original. «Plano» y ⤢ restablecen el encuadre.
+- El nombre de la sección con ⓘ abre su ficha y pronunciación. La lupa busca
+  secciones u objetos por hanzi, pinyin o ES/EN. Las instancias de cada caja se
+  distinguen en la lista. Los puntos y etiquetas se limitan a la sección activa.
+- **Acciones** reúne 11 verbos/expresiones sin inventar objetos visuales para ellos.
+  Las fichas y el audio son los originales; no se agregan flashcards ni oraciones.
+
+Código separado: `supermarket-layout.js` (planta), `supermarket-vocab.js`
+(81 términos: 25 secciones, 45 objetos y 11 acciones), `supermarket-geometry.js`
+(modelos), `supermarket-scene.js` (montaje y selección), `supermarket-view.js`
+(interacciones) y `supermarket.css` (estilos propios). Los modelos repetidos se
+comparten en `<defs>/<use>` y no se reconstruyen durante los gestos.
+
+Comprobar datos y geometría: `node tools/check_supermarket.js`.
+Con el servidor local de Python activo:
+`node tools/test_supermarket.js /tmp/labellearn-supermarket`.
+El test usa Chromium con sandbox, revisa cuatro resoluciones y genera capturas.
+Detalle de la entrega y límites: [SUPERMARKET.md](SUPERMARKET.md).

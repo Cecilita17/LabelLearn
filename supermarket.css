@@ -1,0 +1,17 @@
+/* Solo supermercado: la ciudad y las habitaciones conservan sus estilos. */
+.market-nav { flex:none; padding:5px 10px 8px; background:var(--bg); border-bottom:1px solid var(--line); }
+.market-zone-row { display:flex; align-items:center; gap:8px; }
+.market-nav [data-caption] { max-width:44%; min-height:38px; padding:0; border:0; background:transparent; text-align:left; font-size:11px; color:var(--muted); }
+.market-nav select { flex:1; width:0; min-width:0; height:38px; border:1px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink); font:inherit; font-size:12px; padding:0 7px; }
+.market-shortcuts { display:flex; gap:5px; margin-top:6px; }
+.market-shortcuts button { flex:1; min-width:0; min-height:36px; padding:5px 3px; border:1px solid #becbb9; border-radius:9px; background:#e4ebdc; color:#486459; font-size:11px; }
+.supermarket { background:radial-gradient(ellipse at 50% 44%,#f5efdf,#dce3d1); }
+.supermarket .dot-core { animation:none; stroke:#6e8d7b; stroke-width:1; fill:#fbf3df; }
+.supermarket .obj.sel { filter:brightness(1.12); }
+.supermarket.overview .dots { display:none; }
+.market-panel .s-item { display:flex; flex-direction:column; gap:3px; align-items:flex-start; text-align:left; }
+.market-panel .s-item span { font-size:13px; }
+.market-panel .s-item small { font-size:10px; color:var(--muted); }
+.market-tabs { display:flex; gap:6px; padding:4px 12px 8px; }
+.market-tabs button { flex:1; min-height:38px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); }
+.market-tabs button[aria-pressed="true"] { background:#789783; color:#fff; }

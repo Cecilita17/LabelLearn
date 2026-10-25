@@ -14,7 +14,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
-  var inCity = false;
+  var inCity = false, inSupermarket = false;
   var currentObj = null, currentRoom = null, iso = null, search = null, roomSearch = null, pendingSelect = null;
   var WORDS = {};   // hanzi -> palabra (el baño tiene prioridad, luego el resto del vocabulario)
   [BY_ID.bathroom].concat(ROOMS).forEach(function (r) {
@@ -209,10 +209,16 @@
     search = null; roomSearch = null;
     var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
     inCity = id === 'city';
+    inSupermarket = id === 'supermarket';
     currentRoom = BY_ID[id] || null;
     var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
-    view.classList.toggle('iso-view', isIso || inCity);
-    if (inCity) {
+    view.classList.toggle('iso-view', isIso || inCity || inSupermarket);
+    if (inSupermarket) {
+      view.innerHTML = '';
+      iso = window.SupermarketView.mount(view, { prefs: prefs, lang: function () { return prefs.lang; }, tr: tr, openSheet: openSheet, closeSheet: closeSheet });
+      titleEl.innerHTML = '<b>超市</b>chāoshì · ' + (prefs.lang === 'en' ? 'Supermarket' : 'Supermercado');
+      backBtn.hidden = false;
+    } else if (inCity) {
       view.innerHTML = '';
       iso = window.LabelCityView.mount(view, { prefs: prefs, lang: function () { return prefs.lang; }, tr: tr, openSheet: openSheet, closeSheet: closeSheet });
       titleEl.innerHTML = '<b>城市</b>chéngshì · ' + (prefs.lang === 'en' ? 'City' : 'Ciudad');
@@ -234,7 +240,7 @@
     });
     $('togTrans').textContent = '译 ' + (prefs.lang === 'en' ? 'Translation' : 'Traducción');
     $('shPlay').textContent = '🔊 ' + (prefs.lang === 'en' ? 'Listen' : 'Escuchar');
-    $('backTxt').textContent = prefs.lang === 'en' ? 'Home' : 'Casa';
+    $('backTxt').textContent = inSupermarket ? (prefs.lang === 'en' ? 'City' : 'Ciudad') : (prefs.lang === 'en' ? 'Home' : 'Casa');
     fillRoomSave();
     if (cardsBtn && cardsBtn.isConnected) cardsBtn.fill();
     var cityTitle = view.querySelector('[data-city-title]'), citySub = view.querySelector('[data-city-sub]');
@@ -248,7 +254,8 @@
         n.textContent = tr(BY_ID[n.dataset.tr]);
       });
       var rt = view.querySelector('[data-roof]'); if (rt) rt.textContent = tr(ROOF);
-      if (inCity) { titleEl.lastChild.textContent = 'chéngshì · ' + (prefs.lang === 'en' ? 'City' : 'Ciudad'); }
+      if (inSupermarket) { titleEl.lastChild.textContent = 'chāoshì · ' + (prefs.lang === 'en' ? 'Supermarket' : 'Supermercado'); }
+      else if (inCity) { titleEl.lastChild.textContent = 'chéngshì · ' + (prefs.lang === 'en' ? 'City' : 'Ciudad'); }
       else if (currentRoom) { titleEl.lastChild.textContent = currentRoom.py + ' · ' + tr(currentRoom); }
       else { titleEl.lastChild.textContent = 'jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa'); }
       if (currentObj) fillSheet(currentObj);
@@ -269,8 +276,10 @@
     $('shEmoji').textContent = o.e; $('shZh').textContent = o.zh;
     $('shPy').textContent = o.py; $('shTr').textContent = tr(o);
     var star = $('shStar'), saved = Cards.isSaved(o.zh), en = prefs.lang === 'en';
-    star.hidden = !!inCity || !Cards.hasSentence(o.zh);
+    star.hidden = !!inCity || !!inSupermarket || !Cards.hasSentence(o.zh);
     $('shHouse').hidden = !o.cityHome;
+    $('shSupermarket').hidden = !o.enterSupermarket;
+    $('shSupermarket').textContent = en ? 'Enter supermarket →' : 'Entrar al supermercado →';
     $('shHouse').textContent = en ? 'Enter LabelLearn house →' : 'Entrar a la casa de LabelLearn →';
     star.setAttribute('aria-pressed', saved);
     star.textContent = saved ? '⭐ ' + (en ? 'Saved' : 'Guardada') : '☆ ' + (en ? 'Save' : 'Guardar');
@@ -282,7 +291,7 @@
   $('shPlay').addEventListener('click', function () { if (currentObj) speak(currentObj.zh); });
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
-  backBtn.addEventListener('click', function () { location.hash = '#/'; });
+  backBtn.addEventListener('click', function () { location.hash = inSupermarket ? '#/city' : '#/'; });
   $('togPinyin').addEventListener('click', function () { prefs.pinyin = !prefs.pinyin; save(); applyPrefs(); });
   $('togTrans').addEventListener('click', function () { prefs.trans = !prefs.trans; save(); applyPrefs(); });
   Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
