@@ -286,3 +286,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .fc-stat small { color: var(--muted); font-size: 12px; }
 .fc-btn { padding: 11px 24px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { .fc-inner, .fc-bar i { transition: none; } }
+
+/* Ciudad: misma cámara y fichas, con escala y ayudas propias del mapa. */
+.city-entry { display:flex; align-items:center; gap:12px; margin:8px 0 12px; padding:14px 16px; border:1px solid #b5c4ac; border-radius:16px; background:#e6edda; color:#405e53; text-decoration:none; text-align:left; }
+.city-entry > span:first-child { font-size:30px; }
+.city-entry > span:nth-child(2) { flex:1; }
+.city-entry b,.city-entry small { display:block; }
+.city-entry small { margin-top:3px; font-size:12px; }
+.city { background:radial-gradient(ellipse at 50% 44%,#f2eddc,#dce5d4); }
+.city .dot-core { animation:none; stroke:#718d7c; stroke-width:1; fill:#faf1d9; }
+.city .obj.sel { filter:brightness(1.15); }
+.city-hint { position:absolute; bottom:12px; left:12px; right:12px; text-align:center; pointer-events:none; font-size:11px; color:#506b60; background:#f7f2dfd9; border-radius:20px; padding:7px; }
+.city-house-link { display:block; margin-top:12px; padding:12px; color:#3f6858; border:1px solid #b5c4ac; border-radius:12px; text-decoration:none; font-weight:700; background:#e6edda; }
+.city-house-link[hidden] { display:none; }
+.city-search .s-item { display:flex; align-items:center; gap:8px; }
+.city-search .s-item span { font-size:13px; }

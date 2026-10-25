@@ -14,6 +14,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var view = $('view'), sheet = $('sheet'), titleEl = $('roomTitle'), backBtn = $('back');
+  var inCity = false;
   var currentObj = null, currentRoom = null, iso = null, search = null, roomSearch = null, pendingSelect = null;
   var WORDS = {};   // hanzi -> palabra (el baño tiene prioridad, luego el resto del vocabulario)
   [BY_ID.bathroom].concat(ROOMS).forEach(function (r) {
@@ -111,6 +112,9 @@
     });
     wrap.appendChild(search.bar);
     wrap.appendChild(cardsEntry());
+    var cityEntry = el('a', 'city-entry'); cityEntry.href = '#/city';
+    cityEntry.innerHTML = '<span>🏘️</span><span><b data-city-title>Ciudad</b><small data-city-sub>Un barrio para explorar en chino</small></span><span aria-hidden="true">↗</span>';
+    wrap.appendChild(cityEntry);
     wrap.appendChild(roof);
 
     var body = el('div', 'house-body');
@@ -204,10 +208,16 @@
     if (iso) { iso.destroy(); iso = null; }
     search = null; roomSearch = null;
     var id = (location.hash.match(/^#\/(\w+)/) || [])[1];
+    inCity = id === 'city';
     currentRoom = BY_ID[id] || null;
     var isIso = !!(currentRoom && window.LABELLEARN_SCENES && window.LABELLEARN_SCENES[currentRoom.id]);
-    view.classList.toggle('iso-view', isIso);
-    if (isIso) renderIso(currentRoom); else if (currentRoom) renderRoom(currentRoom); else renderHouse();
+    view.classList.toggle('iso-view', isIso || inCity);
+    if (inCity) {
+      view.innerHTML = '';
+      iso = window.LabelCityView.mount(view, { prefs: prefs, lang: function () { return prefs.lang; }, tr: tr, openSheet: openSheet, closeSheet: closeSheet });
+      titleEl.innerHTML = '<b>城市</b>chéngshì · ' + (prefs.lang === 'en' ? 'City' : 'Ciudad');
+      backBtn.hidden = false;
+    } else if (isIso) renderIso(currentRoom); else if (currentRoom) renderRoom(currentRoom); else renderHouse();
     fillRoomSave();
     applyPrefs(true);
   }
@@ -227,6 +237,9 @@
     $('backTxt').textContent = prefs.lang === 'en' ? 'Home' : 'Casa';
     fillRoomSave();
     if (cardsBtn && cardsBtn.isConnected) cardsBtn.fill();
+    var cityTitle = view.querySelector('[data-city-title]'), citySub = view.querySelector('[data-city-sub]');
+    if (cityTitle) cityTitle.textContent = prefs.lang === 'en' ? 'City' : 'Ciudad';
+    if (citySub) citySub.textContent = prefs.lang === 'en' ? 'A neighborhood to explore in Chinese' : 'Un barrio para explorar en chino';
     if (!skipRoute) {
       Array.prototype.forEach.call(view.querySelectorAll('.cell .tr'), function (n) {
         n.textContent = prefs.lang === 'en' ? n.dataset.en : n.dataset.es;
@@ -235,7 +248,8 @@
         n.textContent = tr(BY_ID[n.dataset.tr]);
       });
       var rt = view.querySelector('[data-roof]'); if (rt) rt.textContent = tr(ROOF);
-      if (currentRoom) { titleEl.lastChild.textContent = currentRoom.py + ' · ' + tr(currentRoom); }
+      if (inCity) { titleEl.lastChild.textContent = 'chéngshì · ' + (prefs.lang === 'en' ? 'City' : 'Ciudad'); }
+      else if (currentRoom) { titleEl.lastChild.textContent = currentRoom.py + ' · ' + tr(currentRoom); }
       else { titleEl.lastChild.textContent = 'jiā · ' + (prefs.lang === 'en' ? 'Home' : 'Casa'); }
       if (currentObj) fillSheet(currentObj);
     }
@@ -255,7 +269,9 @@
     $('shEmoji').textContent = o.e; $('shZh').textContent = o.zh;
     $('shPy').textContent = o.py; $('shTr').textContent = tr(o);
     var star = $('shStar'), saved = Cards.isSaved(o.zh), en = prefs.lang === 'en';
-    star.hidden = !Cards.hasSentence(o.zh);
+    star.hidden = !!inCity || !Cards.hasSentence(o.zh);
+    $('shHouse').hidden = !o.cityHome;
+    $('shHouse').textContent = en ? 'Enter LabelLearn house →' : 'Entrar a la casa de LabelLearn →';
     star.setAttribute('aria-pressed', saved);
     star.textContent = saved ? '⭐ ' + (en ? 'Saved' : 'Guardada') : '☆ ' + (en ? 'Save' : 'Guardar');
   }

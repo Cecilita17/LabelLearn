@@ -1,6 +1,6 @@
 // Service worker de LabelLearn: guarda la app para que abra sin conexión. Red primero (siempre la versión nueva), caché como respaldo.
-var CACHE = 'labellearn-v3';
-var SHELL = ['./', 'index.html', 'styles.css', 'data.js', 'search-index.js', 'sentences.js', 'flashcards.js', 'search.js', 'iso.js', 'scene-bathroom.js', 'scene-kids.js', 'scene-kitchen.js', 'scene-dining.js', 'scene-laundry.js', 'scene-living.js', 'scene-study.js', 'scene-garden.js', 'scene-bedroom.js', 'scene-entrance.js', 'scene-structure.js', 'scene-misc.js', 'scene-positions.js', 'iso-view.js', 'app.js', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest'];
+var CACHE = 'labellearn-v5';
+var SHELL = ['./', 'index.html', 'styles.css', 'data.js', 'search-index.js', 'sentences.js', 'flashcards.js', 'search.js', 'iso.js', 'scene-bathroom.js', 'scene-kids.js', 'scene-kitchen.js', 'scene-dining.js', 'scene-laundry.js', 'scene-living.js', 'scene-study.js', 'scene-garden.js', 'scene-bedroom.js', 'scene-entrance.js', 'scene-structure.js', 'scene-misc.js', 'scene-positions.js', 'iso-view.js', 'app.js', 'city-vocab.js', 'city-map.js', 'city-geometry.js', 'city-scene.js', 'city-view.js', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
 });

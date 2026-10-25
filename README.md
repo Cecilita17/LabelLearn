@@ -43,3 +43,51 @@ Mismo sistema de repaso espaciado que LinguaGloss (escalera 1 min → 10 min →
 - `sentences.js` (generado) trae una oración fácil por palabra (354), con pinyin por palabra y traducción ES/EN; se muestra la del idioma elegido. Las oraciones se escribieron una sola vez en `tools/sentences/*.tsv` (palabra, oración segmentada con espacios, ES, EN) y se compilan con `python3 tools/build_sentences.py` (requiere `pypinyin`; valida que cada palabra del vocabulario tenga oración y aparezca como token).
 - `flashcards.js`: lógica de repaso + pantalla. El progreso se guarda en el dispositivo (`localStorage`, clave `labellearn_flashcards_v1`).
 - «📍 Ver en la casa» abre la habitación y acerca la cámara al objeto.
+
+## Ciudad (maqueta local)
+
+La entrada **Ciudad** de la pantalla principal abre `#/city`. Son nueve manzanas
+con dos calles en cada dirección y un anillo perimetral: hospital, escuela y
+residencias al norte; comercios al oeste; plaza central con juegos y fuente;
+biblioteca, banco y comisaría al este; viviendas, cafetería, restaurante y
+estacionamiento al sur. La casa con techo terracota y cartel **LabelLearn** abre
+la ficha con un enlace a las 13 secciones existentes, sin duplicar sus escenas.
+
+- `city-map.js`: medidas, calles, edificios y posiciones de objetos con ID estable.
+- `city-vocab.js`: fuente manual independiente con 38 palabras, pinyin y ES/EN.
+- `city-geometry.js`: fachadas, techos, ventanas y mobiliario; reutiliza `ISO`.
+- `city-scene.js`: montaje estático, profundidad, zonas interactivas y vocabulario.
+- `city-view.js`: búsqueda urbana y conexión con cámara, fichas y preferencias.
+
+Se puede arrastrar, pellizcar, usar +/−, restablecer la vista, mostrar etiquetas
+y tocar edificios u objetos. La lupa urbana lista también los objetos pequeños
+y permite enfocarlos. La cámara del mapa admite hasta 10× y límites basados en
+su viewBox, incluido el origen negativo. Las habitaciones conservan sus límites
+anteriores. Los árboles comparten un símbolo SVG y la selección usa delegación.
+No hay geometría nueva durante el desplazamiento ni interiores o tráfico animado.
+Las fichas y la pronunciación son las originales. El vocabulario urbano no agrega
+oraciones ni entra en el mazo de flashcards.
+
+Validación de datos y presupuesto de geometría: `node tools/check_city.js`.
+Al tocar archivos urbanos, actualizar `SHELL` y `CACHE` en `sw.js`. El índice de
+la casa se sigue generando con `node tools/build_index.js`; la búsqueda urbana
+se construye desde su propia fuente, sin editar índices generados.
+
+Prueba de integración con navegador: `node tools/test_city.js /tmp/labellearn-city-test`.
+Levanta un servidor local en `127.0.0.1:8000`, usa 390×800 con `hasTouch`, prueba
+arrastre y pellizco táctiles con CPU 4×, selección, fichas, preferencias y las
+13 secciones originales. Guarda dos capturas y un resultado JSON. Requiere
+Playwright y Chromium ya instalados en el entorno de desarrollo; no son
+dependencias de la aplicación. Se puede indicar `CHROMIUM_PATH`.
+
+Estado y diagnóstico de las pruebas de navegador: [VALIDATION.md](VALIDATION.md).
+El script mantiene activado el sandbox de Chromium. Se puede elegir resolución
+con `VIEWPORT=360x800` (por defecto, `390x800`). Si el entorno rechaza sockets,
+guarda el error y la fase en `result.json`; eso no cuenta como prueba aprobada.
+
+Auditoría visual y de rendimiento (servidor local ya iniciado):
+`node tools/audit_city.js /tmp/labellearn-audit`. Revisa las cuatro resoluciones,
+las 55 zonas seleccionables, límites de cámara, encuadre y cobertura de etiquetas;
+guarda capturas, tiempos de cuadro con CPU 4× y recuentos de memoria en
+`audit.json`. Observa la API original de pronunciación sin reemplazar la síntesis.
+La emulación no sustituye la escucha con voz zh-CN ni una prueba en Android real.

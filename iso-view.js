@@ -29,21 +29,43 @@
       '<button type="button" data-t="dots" aria-pressed="true" aria-label="Puntos táctiles">●</button>' +
       '<button type="button" data-t="lbl" aria-pressed="false" aria-label="Etiquetas">Aa</button></div>';
     var svg = host.querySelector('.iso-svg'), cam = svg.querySelector('.cam'), lbls = svg.querySelector('.lbls'), dotsG = svg.querySelector('.dots');
-    var cur = { k: 1, tx: 0, ty: 0 }, showLbl = false, moved = false, raf = 0;
+    var camera = scene.camera || {}, minZoom = camera.min || 0.85, maxZoom = camera.max || 4;
+    var cur = { k: 1, tx: 0, ty: 0 }, showLbl = false, moved = false, raf = 0, overlayScale = null;
 
     // ---------- cámara ----------
     function upu() { var r = svg.getBoundingClientRect(); return 1 / Math.min(r.width / vw, r.height / vh); }   // unidades vb por px
     function clamp(c) {
-      var k = Math.max(0.85, Math.min(4, c.k));
+      var k = Math.max(minZoom, Math.min(maxZoom, c.k));
+      if (scene.camera) {
+        var pad = 48 * upu();
+        var ax = (1-k)*vb[0], bx = (1-k)*(vb[0]+vw);
+        var ay = (1-k)*vb[1], by = (1-k)*(vb[1]+vh);
+        var bounded = { k: k, tx: Math.max(Math.min(ax,bx)-pad, Math.min(Math.max(ax,bx)+pad, c.tx)),
+          ty: Math.max(Math.min(ay,by)-pad, Math.min(Math.max(ay,by)+pad, c.ty)) };
+        if (camera.ground) {
+          // El centro de la cámara queda sobre el terreno, también en las esquinas del rombo.
+          var cx = vb[0] + vw / 2, cy = vb[1] + vh / 2;
+          var px = (cx - bounded.tx) / k, py = (cy - bounded.ty) / k;
+          var gx = (px / I.A + py / I.B) / 2, gy = (py / I.B - px / I.A) / 2;
+          var ground = I.P(Math.max(0, Math.min(scene.W, gx)), Math.max(0, Math.min(scene.D, gy)), 0);
+          bounded.tx = cx - ground[0] * k; bounded.ty = cy - ground[1] * k;
+        }
+        return bounded;
+      }
       var mx = Math.min(0, vw * (1 - k)) - 30, Mx = Math.max(0, vw * (1 - k)) + 30;
       var my = Math.min(0, vh * (1 - k)) - 30, My = Math.max(0, vh * (1 - k)) + 30;
       return { k: k, tx: Math.max(mx, Math.min(Mx, c.tx)), ty: Math.max(my, Math.min(My, c.ty)) };
     }
     function apply(c) {
       cur = clamp(c);
+      var screenUnit = camera.screenSize ? upu() : 1;
       cam.setAttribute('transform', 'translate(' + cur.tx.toFixed(2) + ' ' + cur.ty.toFixed(2) + ') scale(' + cur.k.toFixed(3) + ')');
-      Array.prototype.forEach.call(lbls.children, function (g) { g.setAttribute('transform', 'translate(' + g._x + ' ' + g._y + ') scale(' + (1 / cur.k).toFixed(3) + ')'); });
-      Array.prototype.forEach.call(dotsG.children, function (g) { g.setAttribute('transform', 'translate(' + g.getAttribute('data-x') + ' ' + g.getAttribute('data-y') + ') scale(' + (1 / cur.k).toFixed(3) + ')'); });
+      var scale = (screenUnit / cur.k).toFixed(3);
+      if (!camera.screenSize || overlayScale !== scale) {
+        Array.prototype.forEach.call(lbls.children, function (g) { g.setAttribute('transform', 'translate(' + g._x + ' ' + g._y + ') scale(' + scale + ')'); });
+        Array.prototype.forEach.call(dotsG.children, function (g) { g.setAttribute('transform', 'translate(' + g.getAttribute('data-x') + ' ' + g.getAttribute('data-y') + ') scale(' + scale + ')'); });
+        overlayScale = scale;
+      }
       if (typeof layoutLabels === 'function') layoutLabels();
       svg.classList.toggle('zoomed', cur.k > 1.6);
     }
@@ -58,7 +80,7 @@
     }
     function toVB(cx, cy) { var m = svg.getScreenCTM().inverse(), p = svg.createSVGPoint(); p.x = cx; p.y = cy; p = p.matrixTransform(m); return { x: p.x, y: p.y }; }
     function zoomAt(cx, cy, f, smooth) {
-      var p = toVB(cx, cy), k2 = Math.max(0.85, Math.min(4, cur.k * f)), r = k2 / cur.k;
+      var p = toVB(cx, cy), k2 = Math.max(minZoom, Math.min(maxZoom, cur.k * f)), r = k2 / cur.k;
       var to = { k: k2, tx: p.x - (p.x - cur.tx) * r, ty: p.y - (p.y - cur.ty) * r };
       if (smooth) animate(to, 220); else apply(to);
     }
@@ -82,7 +104,7 @@
       var ids = Object.keys(ptrs);
       if (pinch && ids.length >= 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], mid = toVB((a.x + b.x) / 2, (a.y + b.y) / 2), k = pinch.k * dist(a, b) / pinch.d;
-        k = Math.max(0.85, Math.min(4, k));
+        k = Math.max(minZoom, Math.min(maxZoom, k));
         apply({ k: k, tx: mid.x - pinch.wx * k, ty: mid.y - pinch.wy * k });
       } else if (drag) {
         var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -146,7 +168,7 @@
     // Un filtro voraz oculta las que se pisan (las del vocabulario de la habitación tienen prioridad).
     var labels = [];
     function refreshLabels() {
-      lbls.innerHTML = ''; labels = [];
+      lbls.innerHTML = ''; labels = []; overlayScale = null;
       if (!showLbl) return;
       order.slice().sort(function (a, b) { return (ctx.isCore(b) ? 1 : 0) - (ctx.isCore(a) ? 1 : 0); }).forEach(function (w) {
         var lines = ctx.labelLines(w); if (!lines) return;
@@ -163,21 +185,30 @@
     }
     function layoutLabels() {
       if (!labels.length) return;
-      var full = cur.k >= 1.5, placed = [];
+      var full = cur.k >= 1.5, placed = [], unit = camera.screenSize ? upu() : 1;
       labels.forEach(function (L) {
-        var n = full ? L.lines.length : 1, sizes = [11, 8, 8], wpx = 0, y = -8, i;
-        for (i = 0; i < n; i++) wpx = Math.max(wpx, L.lines[i].length * (i ? 4.7 : 11.5));
-        wpx += 10;
-        var hpx = 6; for (i = 0; i < n; i++) hpx += sizes[i] + 2;
-        for (i = L.texts.length - 1; i >= 0; i--) {
-          if (i >= n) { L.texts[i].setAttribute('display', 'none'); continue; }
-          L.texts[i].removeAttribute('display'); L.texts[i].setAttribute('x', 0); L.texts[i].setAttribute('y', y); y -= sizes[i] + 2;
+        var n = full ? L.lines.length : 1, sizes = [11, 8, 8], wpx = L.width || 0, hpx = L.height || 0, y = -8, i;
+        if (!camera.screenSize || L.mode !== n) {
+          wpx = 0;
+          for (i = 0; i < n; i++) wpx = Math.max(wpx, L.lines[i].length * (i ? 4.7 : 11.5));
+          wpx += 10;
+          hpx = 6; for (i = 0; i < n; i++) hpx += sizes[i] + 2;
+          for (i = L.texts.length - 1; i >= 0; i--) {
+            if (i >= n) { L.texts[i].setAttribute('display', 'none'); continue; }
+            L.texts[i].removeAttribute('display'); L.texts[i].setAttribute('x', 0); L.texts[i].setAttribute('y', y); y -= sizes[i] + 2;
+          }
+          L.rect.setAttribute('x', -wpx / 2); L.rect.setAttribute('width', wpx); L.rect.setAttribute('height', hpx); L.rect.setAttribute('y', -hpx - 3);
+          L.width = wpx; L.height = hpx; L.mode = n;
         }
-        L.rect.setAttribute('x', -wpx / 2); L.rect.setAttribute('width', wpx); L.rect.setAttribute('height', hpx); L.rect.setAttribute('y', -hpx - 3);
         // caja en espacio de cámara (el grupo se escala 1/k, así que mide wpx x hpx)
+        wpx *= unit; hpx *= unit;
         var ax = cur.tx + cur.k * L.x, ay = cur.ty + cur.k * L.y, bx = ax - wpx / 2, by = ay - hpx - 3, hide = false;
         for (i = 0; i < placed.length; i++) { var q = placed[i]; if (bx < q[2] && bx + wpx > q[0] && by < q[3] && by + hpx > q[1]) { hide = true; break; } }
-        if (hide) L.g.setAttribute('display', 'none'); else { L.g.removeAttribute('display'); placed.push([bx, by, bx + wpx, by + hpx]); }
+        if (!camera.screenSize || L.hidden !== hide) {
+          if (hide) L.g.setAttribute('display', 'none'); else L.g.removeAttribute('display');
+          L.hidden = hide;
+        }
+        if (!hide) placed.push([bx, by, bx + wpx, by + hpx]);
       });
     }
 
